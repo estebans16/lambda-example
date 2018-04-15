@@ -7,5 +7,17 @@ functions:
     handler: handler.hello
     events:
       - http:
-          path: users/create
+          path: /hello
+          method: get
+  functionA:
+    handler: handler.functionA
+    events:
+      - http:
+          path: /functionA
+          method: get
+  functionB:
+    handler: handler.functionB
+    events:
+      - http:
+          path: /functionB
           method: get
