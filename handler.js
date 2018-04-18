@@ -9,9 +9,6 @@ module.exports.hello = (event, context, callback) => {
   };
 
   callback(null, response);
-
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // callback(null, { message: 'Go Serverless v1.0! Your function executed successfully!', event });
 };
 
 module.exports.functionB = (event, context, callback) => {
@@ -21,30 +18,36 @@ module.exports.functionB = (event, context, callback) => {
   });
 
   var params = {
-    FunctionName: "functionA", 
+    FunctionName: "lambda-test-dev-functionA", 
     InvocationType: "RequestResponse", 
     LogType: "Tail", 
     Payload: '{ "name" : "Esteban" }'
   };
-  // Payload: JSON.stringify(event, null, 2)
-
-  lambda.invoke(params, function(error, data) {
+  var response = lambda.invoke(params, function(error, data) {
       if (error) {
-        context.done('error ' + error, error);
+        //context.done('error ' + error, error);
+        callback(null, error);
       }
       if(data){
-        context.succeed('functionB said '+ data.Payload);
+        //context.succeed('functionB said '+ data.Payload);
+        const response = {
+          statusCode: 200,
+          body: JSON.stringify({
+            message: data.Payload
+          }),
+        }
+        callback(null, response);
       }
     }
   );
-  // const response = {
-  //   statusCode: 200,
-  //   body: JSON.stringify({
-  //     message: 'other'
-  //   }),
-  // };
+  /* const response = {
+     statusCode: 200,
+     body: JSON.stringify({
+       message: 'other'
+     }),
+   };*/
 
-  // callback(null, response);
+   //callback(null, response['Payload']);
 
   // Use this code if you don't use the http event with the LAMBDA-PROXY integration
   // callback(null, { message: 'Go Serverless v1.0! Your function executed successfully!', event });
@@ -54,4 +57,10 @@ module.exports.functionA = function(event, context) {
   console.log('function A Received event:', JSON.stringify(event, null, 2));
   context.succeed('Hello ' + event.name);
 };
+
+module.exports.functionC = function(event, context) {
+  console.log('function C Received event:', JSON.stringify(event, null, 2));
+  context.succeed('CC ' + event.data);
+};
+
 
