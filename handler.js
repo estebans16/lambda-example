@@ -58,6 +58,55 @@ module.exports.functionA = function(event, context) {
   context.succeed('Hello ' + event.name);
 };
 
+const responseHeaders = {
+    'Content-Type':'application/json',
+    'Access-Control-Allow-Origin' : '*',        // Required for CORS support to work
+    'Access-Control-Allow-Credentials' : true   // Required for cookies, authorization headers with HTTPS 
+}
+
+const responses = {
+    success: (data={}, code=200) => {
+        return {
+            'statusCode': code,
+            'headers': responseHeaders,
+            'body': JSON.stringify(data)
+        }
+    },
+    error: (error) => {
+        return {
+            'statusCode': error.code || 500,
+            'headers': responseHeaders,
+            'body': JSON.stringify(error)
+        }
+    }
+}
+module.exports.functionC = function(event, context, callback) {
+  console.log('function C Received event:', JSON.stringify(event, null, 2));
+  try {
+    //context.succeed('CC ' + event.data);
+    //context.succeed('CC ' + event.pathParameters);
+    //context.succeed('CC2 ' + event.queryStringParameters);
+    const requestBody = JSON.parse(event.body);
+    //requestBody.data
+    //.then(email => {
+    // Create a ‘success’ response object containing the e-mail we 
+    // got back from emailServices.getEmail()
+      callback(null, responses.success(requestBody));
+    //})
+    //.catch(error => {
+    //  callback(null, responses.error(error))
+    //})
+    //callback(null, responses.success(requestBody));
+  }
+  catch (error) {
+    callback(null, responses.error(error));
+    //console.log( error);
+  }
+};
+
+
+
+
 module.exports.functionC = function(event, context) {
   console.log('function C Received event:', JSON.stringify(event, null, 2));
   context.succeed('CC ' + event.data);
