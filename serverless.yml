@@ -27,3 +27,15 @@ functions:
       - http:
           path: /functionC
           method: post
+  writeDynamo:
+    handler: handler.writeDynamo
+    events:
+      - http:
+          path: /writeDynamo
+          method: get
+  readDynamo:
+    handler: handler.readDynamo
+    events:
+      - http:
+          path: /readDynamo
+          method: get

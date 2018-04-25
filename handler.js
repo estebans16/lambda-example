@@ -40,17 +40,6 @@ module.exports.functionB = (event, context, callback) => {
       }
     }
   );
-  /* const response = {
-     statusCode: 200,
-     body: JSON.stringify({
-       message: 'other'
-     }),
-   };*/
-
-   //callback(null, response['Payload']);
-
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // callback(null, { message: 'Go Serverless v1.0! Your function executed successfully!', event });
 };
 
 module.exports.functionA = function(event, context) {
@@ -80,36 +69,70 @@ const responses = {
         }
     }
 }
+
 module.exports.functionC = function(event, context, callback) {
   console.log('function C Received event:', JSON.stringify(event, null, 2));
   try {
-    //context.succeed('CC ' + event.data);
-    //context.succeed('CC ' + event.pathParameters);
-    //context.succeed('CC2 ' + event.queryStringParameters);
     const requestBody = JSON.parse(event.body);
-    //requestBody.data
-    //.then(email => {
-    // Create a ‘success’ response object containing the e-mail we 
-    // got back from emailServices.getEmail()
-      callback(null, responses.success(requestBody));
-    //})
-    //.catch(error => {
-    //  callback(null, responses.error(error))
-    //})
-    //callback(null, responses.success(requestBody));
+    callback(null, responses.success(requestBody));
   }
   catch (error) {
     callback(null, responses.error(error));
-    //console.log( error);
   }
 };
 
 
+module.exports.writeDynamo = function(event, context, callback) {
+  console.log('function writeDynamo started');
+  var AWS = require('aws-sdk');
+  var docClient = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'})
+  var params = {
+    Item: {
+      date: Date.now(),
+      message: event.message
+    },
+    TableName: 'guestbook'
+  };
+
+  docClient.put(params, function(error, data){
+    if (error) {
+      callback(error, null);
+    }else {
+      callback(null, data);
+    }
+  });
+
+}
+
+module.exports.readDynamo = function(event, context, callback) {
+  console.log('function readDynamo started');
+  var AWS = require('aws-sdk');
+  var docClient = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'})
+  let scanningParameters = {
+    TableName: 'guestbook',
+    Limit: 100
+  };
+
+  docClient.scan(scanningParameters, function(error, data){
+    if (error) {
+      callback(error, null);
+    }else {
+      callback(null, data);
+    }
+  });
 
 
-module.exports.functionC = function(event, context) {
-  console.log('function C Received event:', JSON.stringify(event, null, 2));
-  context.succeed('CC ' + event.data);
-};
+  /*let params = {
+    TableName: 'guestbook',
+    Limit: 100
+  };
 
+  docClient.get(params, function(error, data){
+    if (error) {
+      callback(error, null);
+    }else {
+      callback(null, data);
+    }
+  });*/
 
+}

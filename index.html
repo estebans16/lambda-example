@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	<h1>titulooo</h1>
+	<div id="entries"></div>
+	<h1>nueva entrada</h1>
+	<form>
+		<label for="msg">Message</label>
+		<textarea id='msg'></textarea>
+		<button id='submitButton'>Enviar</button>
+	</form>
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script type="text/javascript">
+		let API_URL = 'https://390lpvztak.execute-api.us-east-1.amazonaws.com/dev/entries'
+
+		$(document).ready(function () {
+
+			$.ajax({
+				type: 'GET',
+				url: API_URL,
+
+				success: function(data){
+					$('#entries').html('');
+					data.Items.forEach(function(guestbookItem){
+						$('#entries').append('<p>' + guestbookItem.message + '</p>' );
+					})
+				}
+
+			});
+		});
+
+		$('#submitButton').on('click', function(){
+			$.ajax({
+				type: 'POST',
+				url: API_URL,
+				data: JSON.stringify({"message": $('#msg').val()}),
+				contenType: "application/json",
+				success: function(data){
+					location.reload();
+				}
+			});
+			return false;	
+		});
+	
+	</script>
+</html>
