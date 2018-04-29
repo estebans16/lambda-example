@@ -39,3 +39,9 @@ functions:
       - http:
           path: /readDynamo
           method: get
+  figura:
+    handler: handler.figura
+    events:
+      - http:
+          path: /figura
+          method: get
