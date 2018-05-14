@@ -3,45 +3,9 @@ provider:
   name: aws
   runtime: nodejs6.10
 functions:
-  hello:
-    handler: handler.hello
+  start_agent:
+    handler: handler.start_agent
     events:
       - http:
-          path: /hello
-          method: get
-  functionA:
-    handler: handler.functionA
-    events:
-      - http:
-          path: /functionA
-          method: get
-  functionB:
-    handler: handler.functionB
-    events:
-      - http:
-          path: /functionB
-          method: get
-  functionC:
-    handler: handler.functionC
-    events:
-      - http:
-          path: /functionC
+          path: /start_agent
           method: post
-  writeDynamo:
-    handler: handler.writeDynamo
-    events:
-      - http:
-          path: /writeDynamo
-          method: get
-  readDynamo:
-    handler: handler.readDynamo
-    events:
-      - http:
-          path: /readDynamo
-          method: get
-  figura:
-    handler: handler.figura
-    events:
-      - http:
-          path: /figura
-          method: get
