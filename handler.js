@@ -138,7 +138,7 @@ module.exports.start_agent = function(event, context, callback) {
       FunctionName: "lambda-test-dev-readDynamo", 
       InvocationType: "RequestResponse", 
       LogType: "Tail", 
-      Payload:  JSON.stringify( {"body": '{"data": "agente1"}'} )
+      Payload:  JSON.stringify( {"body": '{"data": "' + name + '"}'})
       // JSON.stringify( {"body": {"data": "agente1"}} )
       // "body": "{\n    \"data\": \"agente1\"\n}\n"
   };
@@ -162,13 +162,13 @@ module.exports.start_agent = function(event, context, callback) {
   });
   console.log("vuelve de invocar a readDynamo");
   // console.log(agent.to_json());
-  try {
+  // try {
     // const requestBody = JSON.parse(agent.to_json());
-    callback(null, responses.success(agent));
-  }
-  catch (error) {
-    callback(null, responses.error(error));
-  }
+    // callback(null, responses.success(agent));
+  // }
+  // catch (error) {
+    // callback(null, responses.error(error));
+  // }
 };
 
 
