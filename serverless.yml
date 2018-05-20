@@ -9,3 +9,9 @@ functions:
       - http:
           path: /start_agent
           method: post
+  readDynamo:
+    handler: handler.readDynamo
+    events:
+      - http:
+          path: /readDynamo
+          method: post
