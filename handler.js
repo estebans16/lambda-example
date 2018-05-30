@@ -52,123 +52,66 @@ class Agent{
             };
     return a;
   }
+
+  run(){
+    //analizar pedido
+    console.log("arranque a analizar");
+  }
 }
 
+class DatabaseHandling{
+  constructor() {
+    this.aws = require('aws-sdk');
+    this.lambda = new this.aws.Lambda({ 
+      region: 'us-east-1' //change to your region
+    });
+    this.count = 0;
+    this.docClient = new this.aws.DynamoDB.DocumentClient({region: 'us-east-1'});
+  }
 
-// class DatabaseHandling{
-//   constructor() {
-//     this.aws = require('aws-sdk');
-//     this.lambda = new aws.Lambda({ 
-//       region: 'us-east-1' //change to your region
-//     });
+  find_agent(name) {
+    console.log('find_agent');
+    let params = {
+      TableName: 'agents',
+      Key: {
+        "name": name
+      }
+    };
+    var self = this;
+    this.docClient.get(params, function(error, data){
+      if (error) {
+        // console.log("GetItem error:", error);
+        self.error(error);
+      }else {
+        // console.log("GetItem succeeded:", JSON.stringify(data, null));
+        self.success(data);
+      }
+    });
+    console.log('despues del promise');
+  };
+  
 
-//     // this.docClient = new this.aws.DynamoDB.DocumentClient({region: 'us-east-1'});
-//   }
+  success(data) {
+    this.count = this.count + 1;
+    console.log(data);
+    var agent = new Agent(data.Item.name);
+    return agent.run();
+  }
 
-//   // find_agent(name) {
-//   //   console.log('find_agent');
-//   //   let params = {
-//   //     AttributesToGet: 'name',
-//   //     TableName: 'agents',
-//   //     Key: {
-//   //       "name": name
-//   //     }
-//   //   };
-//   //   this.docClient.get(params, function(error, data){
-//   //     if (error) {
-//   //       console.log("GetItem error:", error);
-//   //       // callback(error, null);
-//   //       return 'error';
-//   //     }else {
-//   //       console.log("GetItem succeeded:", JSON.stringify(data, null));
-//   //       agent1.name = data.name;
-//   //       // return data;
-//   //       // callback(null, data);
-//   //     }
-//   //   })
-//   //   console.log(agent1.name);
-//   //   // console.log('defino agent1 name');
-//   //   // agent1.name = 'testname';
-//   //   // console.log(agent1.name);
-//   //   // return agent;
-//   // }
-
-//   // find_agent(name){
-//   //   var params = {
-//   //     FunctionName: "lambda-test-dev-readDynamo", 
-//   //     InvocationType: "RequestResponse", 
-//   //     LogType: "Tail", 
-//   //     Payload: '{ "data" : ' +  name  + '}'
-//   //   };
-//   //   var response = lambda.invoke(params, function(error, data) {
-//   //       if (error) {
-//   //         //context.done('error ' + error, error);
-//   //         callback(null, error);
-//   //       }
-//   //       if(data){
-//   //         //context.succeed('functionB said '+ data.Payload);
-//   //         const response = {
-//   //           statusCode: 200,
-//   //           body: JSON.stringify({
-//   //             message: data.Payload
-//   //           }),
-//   //         }
-//   //         callback(null, response);
-//   //       }
-//   //     }
-//   //   );
-
-//   // }
-// }
+  error(error){
+    console.log(error);
+    console.log('programa finalizado');
+  }
+}
 
 module.exports.start_agent = function(event, context, callback) {
   console.log('agent Received event:', JSON.stringify(event, null, 2));
-  // const database = new DatabaseHandling();
+  const database = new DatabaseHandling();
   const requestBody = JSON.parse(event.body);
   const name = requestBody.data;
-  // const agent = new Agent('agente1');
-  console.log('viene agente');
-  
-  const aws = require('aws-sdk');
-  const lambda = new aws.Lambda({ 
-      region: 'us-east-1' //change to your region
-  });
-
-  var params = {
-      FunctionName: "lambda-test-dev-readDynamo", 
-      InvocationType: "RequestResponse", 
-      LogType: "Tail", 
-      Payload:  JSON.stringify( {"body": '{"data": "' + name + '"}'})
-      // JSON.stringify( {"body": {"data": "agente1"}} )
-      // "body": "{\n    \"data\": \"agente1\"\n}\n"
-  };
-  console.log("invoca a readDynamo");
-  lambda.invoke(params, function(error, data) {
-    if (error) {
-        //context.done('error ' + error, error);
-      callback(null, error);
-    }
-    if(data){
-      //context.succeed('functionB said '+ data.Payload);
-      const response = {
-        statusCode: 200,
-        body: JSON.stringify({
-          message: data.Payload
-        }),
-      }
-      console.log('exito al invocar')
-      callback(null, response);
-    }
-  });
-  console.log("vuelve de invocar a readDynamo");
-  // console.log(agent.to_json());
-  // try {
-    // const requestBody = JSON.parse(agent.to_json());
-    // callback(null, responses.success(agent));
-  // }
-  // catch (error) {
-    // callback(null, responses.error(error));
-  // }
+  database.find_agent(name);
+  console.log('finaliza el start');
+  callback(null, responses.success('fin'));
 };
 
 
