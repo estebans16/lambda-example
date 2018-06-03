@@ -60,13 +60,13 @@ class Agent{
 }
 
 class DatabaseHandling{
-  constructor() {
+  constructor(callback) {
     this.aws = require('aws-sdk');
     this.lambda = new this.aws.Lambda({ 
       region: 'us-east-1' //change to your region
     });
-    this.count = 0;
     this.docClient = new this.aws.DynamoDB.DocumentClient({region: 'us-east-1'});
+    this.callback = callback;
   }
 
   find_agent(name) {
@@ -80,10 +80,8 @@ class DatabaseHandling{
     var self = this;
     this.docClient.get(params, function(error, data){
       if (error) {
-        // console.log("GetItem error:", error);
         self.error(error);
       }else {
-        // console.log("GetItem succeeded:", JSON.stringify(data, null));
         self.success(data);
       }
     });
@@ -92,26 +90,34 @@ class DatabaseHandling{
   
 
   success(data) {
-    this.count = this.count + 1;
     console.log(data);
-    var agent = new Agent(data.Item.name);
-    return agent.run();
+    if (data.Item != undefined){
+      var agent = new Agent(data.Item.name);
+      agent.run();
+      console.log('Agente encontrado');
+      this.callback(null, responses.success('Agente encontrado'));
+    }else{
+      console.log('Agente no encontrado');
+      this.callback(null, responses.error('Agente no encontrado'));
+    }
+
   }
 
   error(error){
     console.log(error);
     console.log('programa finalizado');
+    this.callback(null, responses.error('programa finalizado'));
   }
 }
 
 module.exports.start_agent = function(event, context, callback) {
   console.log('agent Received event:', JSON.stringify(event, null, 2));
-  const database = new DatabaseHandling();
+  const database = new DatabaseHandling(callback);
   const requestBody = JSON.parse(event.body);
   const name = requestBody.data;
   database.find_agent(name);
   console.log('finaliza el start');
-  callback(null, responses.success('fin'));
+  // callback(null, responses.success('fin'));
 };
 
 
