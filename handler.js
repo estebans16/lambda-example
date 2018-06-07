@@ -27,6 +27,10 @@ class Agent{
   constructor(name) {
     this._name = name.charAt(0).toUpperCase() + name.slice(1);
     this.providers = ['proveedor1', 'proveedor2'];
+    this.aws = require('aws-sdk');
+    this.lambda = new this.aws.Lambda({ 
+      region: 'us-east-1' //change to your region
+    });
   }
 
   set name(name) {
@@ -56,8 +60,63 @@ class Agent{
   run(){
     //analizar pedido
     console.log("arranque a analizar");
+    console.log(this._name);
+    if (this._name == 'Agente1') {
+      console.log("arranque a analizooo");
+      var params = {
+        FunctionName: "lambda-test-dev-start_agent", 
+        InvocationType: "RequestResponse", 
+        LogType: "Tail", 
+        Payload:  JSON.stringify( {"body": '{"data": "' + 'agente2' + '"}'})
+      };
+      console.log("invoca a agente2");
+      this.lambda.invoke(params, function(error, data) {
+        if (error) {
+          console.log(error);
+            //context.done('error ' + error, error);
+          // callback(null, error);
+        }
+        if(data){
+          //context.succeed('functionB said '+ data.Payload);
+          const response = {
+            statusCode: 200,
+            body: JSON.stringify({
+              message: data.Payload
+            }),
+          }
+          console.log('exito al invocar')
+          // callback(null, response);
+        }
+      });
+    }
+  }
+
+  eso(){
+    console.log("anda o no anda");
   }
 }
+
+// class Message{
+//   constructor(from, to, data){
+//     this.from = from;
+//     this.to = to;
+//     this.body = data;
+//   }
+// }
+
+// class CallForProposal extends Message {
+//   constructor(from, to, count){
+//     super(from, to, {"count": count} )
+//   }
+// }
+
+// class Propose extends Message {
+//   constructor(from, to, count, price, periods){
+//     super(from, to, {"count": count, "price": price, "periods": periods })
+//   }
+// }
+
+
 
 class DatabaseHandling{
   constructor(callback) {
@@ -77,37 +136,40 @@ class DatabaseHandling{
         "name": name
       }
     };
-    var self = this;
-    this.docClient.get(params, function(error, data){
-      if (error) {
-        self.error(error);
-      }else {
-        self.success(data);
-      }
+    // var self = this;
+    let promise = new Promise((resolve, reject) => {
+      this.docClient.get(params, function(error, data){
+        if (error) {
+          // self.error(error);
+          reject(error);
+        }else {
+          // self.success(data);
+          resolve(data);
+        }
+      });
     });
-    console.log('despues del promise');
+    return promise;
   };
   
+  // success(data) {
+  //   console.log(data);
+  //   if (data.Item != undefined){
+  //     var agent = new Agent(data.Item.name);
+  //     agent.run();
+  //     console.log('Agente encontrado');
+  //     //this.callback(null, responses.success('Agente encontrado'));
+  //   }else{
+  //     console.log('Agente no encontrado');
+  //     //this.callback(null, responses.error('Agente no encontrado'));
+  //   }
 
-  success(data) {
-    console.log(data);
-    if (data.Item != undefined){
-      var agent = new Agent(data.Item.name);
-      agent.run();
-      console.log('Agente encontrado');
-      this.callback(null, responses.success('Agente encontrado'));
-    }else{
-      console.log('Agente no encontrado');
-      this.callback(null, responses.error('Agente no encontrado'));
-    }
+  // }
 
-  }
-
-  error(error){
-    console.log(error);
-    console.log('programa finalizado');
-    this.callback(null, responses.error('programa finalizado'));
-  }
+  // error(error){
+  //   console.log(error);
+  //   console.log('programa finalizado');
+  //   this.callback(null, responses.error('programa finalizado'));
+  // }
 }
 
 module.exports.start_agent = function(event, context, callback) {
@@ -115,32 +177,6 @@ module.exports.start_agent = function(event, context, callback) {
   const database = new DatabaseHandling(callback);
   const requestBody = JSON.parse(event.body);
   const name = requestBody.data;
-  database.find_agent(name);
+  database.find_agent(name).then(data => new Agent(data.Item.name).eso());
   console.log('finaliza el start');
-  // callback(null, responses.success('fin'));
 };
-
-
-module.exports.readDynamo = function(event, context, callback) {
-  console.log('function readDynamo started');
-  console.log(event);
-  var AWS = require('aws-sdk');
-  var docClient = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'})
-  const requestBody = JSON.parse(event.body);
-  const name = requestBody.data;
-  console.log(name);
-  let params = {
-      TableName: 'agents',
-      Key: {
-        "name": name
-      }
-  };
-  docClient.get(params, function(error, data){
-    if (error) {
-      callback(error, null);
-    }else {
-      console.log(data);
-      callback(null, new Agent(data.Item.name));
-    }
-  });
-}
