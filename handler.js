@@ -24,9 +24,9 @@ const responses = {
 }
 
 class Agent{
-  constructor(name) {
+  constructor(name, providers) {
     this._name = name.charAt(0).toUpperCase() + name.slice(1);
-    this.providers = ['proveedor1', 'proveedor2'];
+    this.providers = providers;
     this.aws = require('aws-sdk');
     this.lambda = new this.aws.Lambda({ 
       region: 'us-east-1' //change to your region
@@ -177,6 +177,6 @@ module.exports.start_agent = function(event, context, callback) {
   const database = new DatabaseHandling(callback);
   const requestBody = JSON.parse(event.body);
   const name = requestBody.data;
-  database.find_agent(name).then(data => new Agent(data.Item.name).eso());
+  database.find_agent(name).then(data => new Agent(data.Item.name, data.Item.providers).eso());
   console.log('finaliza el start');
 };
